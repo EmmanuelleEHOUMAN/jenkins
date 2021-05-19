@@ -2,6 +2,6 @@
 #deploy_local.sh
 
 mkdir -p /app
-cp HelloWorld.class /app
+cp helloWorld.class /app
 cd /app
-java HelloWorld
+java helloWorld
