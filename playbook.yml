@@ -1,0 +1,36 @@
+
+---
+- name: Deploy Java program
+  hosts: all
+  become: yes
+
+  tasks:
+#    - name: Execute the command in remote shell; stdout goes to the specified file on the remote.
+#      shell: echo "HelloWorld" > log.txt
+    - name: Installation de Java
+      shell: amazon-linux-extras install -y java-openjdk11
+      register: result_install
+
+    - debug:
+        var=result_install
+
+    - name: Création du dossier /app sur la machine distante
+      #shell: mkdir -p /app && chmod -R 777 /app && chown ec2-user /app
+      file: #mieux car idempotent par rapport au module shell
+        path: /app
+        state: directory
+        mode: 0777
+        owner: ec2-user
+
+    - name: "Copier (faire un scp) le fichier local helloWorld.class sur le dossier remote /app"
+      copy:
+        src: helloWorld.class
+        dest: /app
+        mode: 0644
+    - name: On execute le fichier helloWorld.class
+      shell: cd /app && java helloWorld
+      #On prend tout ce qui est du stdout et on le met dans la variable result
+      register: result
+
+    - debug:
+        var=result
