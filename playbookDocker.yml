@@ -1,0 +1,47 @@
+---
+- name: Deploy Java program
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Installation de Docker et démarrage de docker
+      shell: amazon-linux-extras install -y docker && systemctl start docker
+      register: result_install
+
+    - debug:
+        var=result_install
+
+    - name: Création du dossier /app sur la machine distante
+      #shell: mkdir -p /app && chmod -R 777 /app && chown ec2-user /app
+      file: #mieux car idempotent par rapport au module shell
+        path: /app
+        state: directory
+        mode: 0777
+        owner: ec2-user
+
+    - name: "Copier (faire un scp) le fichier local helloWorld.class sur le dossier remote /app"
+      copy:
+        src: helloWorld.class
+        dest: /app
+        mode: 0644
+ 
+    - name: "Copier (faire un scp) le fichier local Dockerfile sur le dossier remote /app"
+      copy:
+        src: Dockerfile
+        dest: /app
+        mode: 0644
+
+    - name: On genere l'image docker, on l'appelle formation/java:1.0
+      shell: cd /app && docker build -t formation/java:1.0 .
+      #On prend tout ce qui est du stdout et on le met dans la variable result
+      register: result
+    - debug:
+        var=result
+
+
+    - name: On execute le contenur de l'image docker formation/java:1.0
+      shell: docker run --rm --name conteneur_app formation/java:1.0
+      #On prend tout ce qui est du stdout et on le met dans la variable result
+      register: result
+    - debug:
+        var=result
